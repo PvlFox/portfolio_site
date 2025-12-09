@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Pitch Detector</title>
+
+<style>
+/* === Общий стиль страницы === */
+body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 40px 20px;
+}
+h1 { margin-bottom: 10px; }
+button {
+    padding: 12px 30px;
+    background: #238636;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+}
+#status { margin-top: 15px; color: #ff6b6b; font-size: 18px; }
+#freq { font-size: 48px; margin-top: 30px; }
+#note { font-size: 64px; font-weight: bold; color: #58a6ff; margin-bottom: 30px; }
+
+/* === Таблица нот === */
+#freqTable {
+    margin: 40px auto;
+    border-collapse: collapse;
+    background: #161b22;
+    color: #e6edf3;
+    width: 95%;
+    max-width: 900px;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+}
+#freqTable th, #freqTable td {
+    padding: 10px;
+    border-bottom: 1px solid #30363d;
+    border-right: 1px solid #30363d;
+    font-size: 15px;
+}
+#freqTable th {
+    background: #21262d;
+}
+#freqTable tr:nth-child(even) {
+    background: #0d1117;
+}
+
+/* === Подсветка активной ноты === */
+.highlight {
+    background: #238636 !important;
+    color: white !important;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+<a href="index.html" class="back-arrow" title="Назад" aria-label="Назад">
+  <svg
+    width="55"
+    height="55"
+    viewBox="0 0 111 111"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    >
+    <g clip-path="url(#clip0_6_75)">
+      <path
+        d="M98.7761 39.9739C90.8951 32.0929 80.4542 27.75 69.375 27.75H26.5568L44.4971 9.80963L34.6875 0L0 34.6875L34.6875 69.375L44.4971 59.5654L26.5568 41.625H69.375C76.7496 41.625 83.7079 44.5249 88.9665 49.7835C94.2251 55.0421 97.125 62.0004 97.125 69.375C97.125 76.7496 94.2251 83.7079 88.9665 88.9665C83.7079 94.2251 76.7496 97.125 69.375 97.125H41.625V111H69.375C80.4542 111 90.8951 106.657 98.7761 98.7761C106.657 90.8951 111 80.4542 111 69.375C111 58.2958 106.657 47.8549 98.7761 39.9739Z"
+        fill="#1c99ff"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_6_75">
+        <rect width="111" height="111" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+</a>
+<h1>Pitch Detector</h1>
+<button onclick="startAudio()">Запустить</button>
+
+<div id="status"></div>
+
+<div id="freq">0 Hz</div>
+<div id="note">—</div>
+
+
+<h2>Таблица нот по октавам</h2>
+
+<table id="freqTable">
+    <thead id="freqHead"></thead>
+    <tbody id="freqTableBody"></tbody>
+</table>
+
+<script>
+
+let audioContext, analyser, buffer;
+
+async function startAudio() {
+    try {
+        document.getElementById("status").textContent = "Запрашиваю доступ к микрофону…";
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        document.getElementById("status").textContent = "Микрофон разрешён ✔";
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        const source = audioContext.createMediaStreamSource(stream);
+
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+
+        buffer = new Float32Array(analyser.fftSize);
+
+
+        source.connect(analyser);
+
+        detectPitch();
+
+    } catch (e) {
+        document.getElementById("status").textContent =
+            "❌ Ошибка: " + e.message;
+    }
+}
+
+function detectPitch() {
+    requestAnimationFrame(detectPitch);
+
+    if (!analyser) return;
+
+    analyser.getFloatTimeDomainData(buffer);
+    const freq = autoCorrelate(buffer, audioContext.sampleRate);
+
+    if (freq > 0) {
+        document.getElementById("freq").textContent = freq.toFixed(1) + " Hz";
+
+        const note = frequencyToNote(freq);
+        document.getElementById("note").textContent = note;
+
+        highlightNoteInTable(note);
+    }
+}
+
+
+function autoCorrelate(buf, sampleRate) {
+    let SIZE = buf.length;
+    let rms = 0;
+
+    for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return -1;
+
+    let c = new Array(SIZE).fill(0);
+
+    for (let i = 0; i < SIZE; i++)
+        for (let j = 0; j < SIZE - i; j++)
+            c[i] += buf[j] * buf[j + i];
+
+    let d = 0;
+    while (c[d] > c[d+1]) d++;
+
+    let maxval = -1, maxpos = -1;
+    for (let i = d; i < SIZE; i++)
+        if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+
+    return sampleRate / maxpos;
+}
+
+
+const notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+function frequencyToNote(freq) {
+    const midi = Math.round(12 * Math.log2(freq / 440) + 69);
+    const note = notes[midi % 12];
+    const oct = Math.floor(midi / 12) - 1;
+    return note + oct;
+}
+
+
+function fillFreqTable() {
+    const head = document.getElementById("freqHead");
+    const body = document.getElementById("freqTableBody");
+
+    const octaves = [...Array(9).keys()];
+
+    let headRow = "<tr><th>Нота</th>";
+    octaves.forEach(o => headRow += `<th>${o}</th>`);
+    headRow += "</tr>";
+    head.innerHTML = headRow;
+
+    body.innerHTML = "";
+
+    for (let n = 0; n < notes.length; n++) {
+        const noteName = notes[n];
+        let tr = `<tr><td>${noteName}</td>`;
+
+        octaves.forEach(oct => {
+            const midi = (oct + 1) * 12 + n;
+
+            if (midi < 21 || midi > 108) {
+                tr += `<td>—</td>`;
+            } else {
+                const freq = 440 * Math.pow(2, (midi - 69) / 12);
+                tr += `<td id="cell-${noteName}-${oct}">${freq.toFixed(1)}</td>`;
+            }
+        });
+
+        tr += "</tr>";
+        body.insertAdjacentHTML("beforeend", tr);
+    }
+}
+
+fillFreqTable();
+
+
+function highlightNoteInTable(noteStr) {
+    const note = noteStr.slice(0, -1);
+    const oct = noteStr.slice(-1);
+
+    document.querySelectorAll(".highlight")
+        .forEach(el => el.classList.remove("highlight"));
+
+    const cell = document.getElementById(`cell-${note}-${oct}`);
+    if (cell) cell.classList.add("highlight");
+}
+</script>
+
+</body>
+</html>

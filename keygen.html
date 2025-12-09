@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="main.css"> 
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>KeygenMusic</title>
+  </head>
+  <body>
+    <a href="index.html" class="back-arrow" title="Назад" aria-label="Назад">
+  <svg
+    width="55"
+    height="55"
+    viewBox="0 0 111 111"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    >
+    <g clip-path="url(#clip0_6_75)">
+      <path
+        d="M98.7761 39.9739C90.8951 32.0929 80.4542 27.75 69.375 27.75H26.5568L44.4971 9.80963L34.6875 0L0 34.6875L34.6875 69.375L44.4971 59.5654L26.5568 41.625H69.375C76.7496 41.625 83.7079 44.5249 88.9665 49.7835C94.2251 55.0421 97.125 62.0004 97.125 69.375C97.125 76.7496 94.2251 83.7079 88.9665 88.9665C83.7079 94.2251 76.7496 97.125 69.375 97.125H41.625V111H69.375C80.4542 111 90.8951 106.657 98.7761 98.7761C106.657 90.8951 111 80.4542 111 69.375C111 58.2958 106.657 47.8549 98.7761 39.9739Z"
+        fill="#1c99ff"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_6_75">
+        <rect width="111" height="111" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+</a>
+    <div class="main">
+      <h1 class="rainbow-text">KEYGEN MUSIC</h1>
+      <div class="card">
+        <div class="card-header">
+          <a
+            href="https://drive.google.com/file/d/1PPKXXwU3piN4JEHWHbNILup6Doj9qY4G/view?usp=drive_link"
+            class="download"
+          >
+            <img src="images/download.png" alt="Download Button" draggable="false" />
+            <span class="download-text">Songs Download</span>
+          </a>
+          <div class="info">
+            <div class="field group">
+              <label for="group">Group</label>
+              <span id="group">CS-306(c)</span>
+            </div>
+            <div class="field">
+              <label for="name">ID</label>
+              <span id="name">Maxim Mikhaylov</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div id="trackInfo">
+            Current Track: <span id="currentTrackName"></span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="actions">
+            <button id="pauseButton" onclick="togglePause()">Pause</button>
+            <button id="centeredButton" onclick="toggleMusic()">
+              Generate
+            </button>
+          </div>
+          <div class="volume-control">
+            <label for="volumeSlider" id="volumeLabel">vol</label>
+            <input
+              type="range"
+              id="volumeSlider"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+              oninput="changeVolume()"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
